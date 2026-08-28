@@ -2,6 +2,7 @@ package synq_backend.user.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import synq_backend.user.dto.CreateUserRequest;
 import synq_backend.user.dto.UserDTO;
@@ -30,4 +31,5 @@ public class UserController {
     public UserDTO createUser(@Valid @RequestBody CreateUserRequest request){
         return userService.createUser(request);
     }
+
 }
