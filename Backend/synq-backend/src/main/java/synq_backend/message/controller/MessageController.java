@@ -52,4 +52,20 @@ public class MessageController {
 
         return ResponseEntity.ok(messages);
     }
+
+    // Soft deletes a message for the authenticated sender.
+    @DeleteMapping("/{messageId}")
+    public ResponseEntity<Void> deleteMessage(
+            Authentication authentication,
+            @PathVariable UUID messageId
+    ){
+        User user = (User) authentication.getPrincipal();
+
+        messageService.deleteMessage(
+                user.getId(),
+                messageId
+        );
+
+        return ResponseEntity.noContent().build();
+    }
 }

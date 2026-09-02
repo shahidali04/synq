@@ -25,13 +25,16 @@ public class MessageDTO {
 
     private OffsetDateTime updatedAt;
 
+    private boolean deleted;
+
     public MessageDTO(
             UUID id,
             UUID conversationId,
             UUID senderId,
             String content,
             OffsetDateTime createdAt,
-            OffsetDateTime updatedAt
+            OffsetDateTime updatedAt,
+            boolean deleted
     ){
         this.id =id;
         this.conversationId = conversationId;
@@ -39,5 +42,6 @@ public class MessageDTO {
         this.content = content;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deleted = deleted;
     }
 }

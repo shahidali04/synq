@@ -12,6 +12,7 @@ import synq_backend.message.repository.MessageRepository;
 import synq_backend.user.entity.User;
 import synq_backend.user.repository.UserRepository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -76,7 +77,8 @@ public class MessageService {
                 savedMessage.getSender().getId(),
                 savedMessage.getContent(),
                 savedMessage.getCreatedAt(),
-                savedMessage.getUpdatedAt()
+                savedMessage.getUpdatedAt(),
+                savedMessage.getDeletedAt() != null
         );
     }
 
@@ -109,10 +111,30 @@ public class MessageService {
                         message.getId(),
                         message.getConversation().getId(),
                         message.getSender().getId(),
-                        message.getContent(),
+                        message.getDeletedAt() != null
+                                ? null
+                                : message.getContent(),
                         message.getCreatedAt(),
-                        message.getUpdatedAt()
+                        message.getUpdatedAt(),
+                        message.getDeletedAt() != null
                 ))
                 .toList();
+    }
+
+    // Soft deletes a message when requested by its sender.
+    @Transactional
+    public void deleteMessage(UUID currentId, UUID messageId){
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Message not found"));
+
+        if (!message.getSender().getId().equals(currentId)){
+            throw new IllegalArgumentException("User is not the sender of this message");
+        }
+
+        message.setDeletedAt(OffsetDateTime.now());
+
+        messageRepository.save(message);
     }
 }
