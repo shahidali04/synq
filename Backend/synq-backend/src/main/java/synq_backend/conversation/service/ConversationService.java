@@ -11,6 +11,7 @@ import synq_backend.conversation.repository.ConversationRepository;
 import synq_backend.user.entity.User;
 import synq_backend.user.repository.UserRepository;
 
+import java.util.List;
 import java.util.UUID;
 
 // Contains the business logic for creating and managing conversations.
@@ -92,5 +93,21 @@ public class ConversationService {
                 conversation.getCreatedAt(),
                 conversation.getUpdatedAt()
         );
+    }
+
+    public List<ConversationDTO> getUserConversations(UUID userId){
+
+        List<Conversation> conversations = participantRepository
+                .findConversationsByUserId(userId);
+
+        return conversations.stream()
+                .map(conversation -> new ConversationDTO(
+                        conversation.getId(),
+                        conversation.getType().name(),
+                        conversation.getCreatedBy().getId(),
+                        conversation.getCreatedAt(),
+                        conversation.getUpdatedAt()
+                ))
+                .toList();
     }
 }

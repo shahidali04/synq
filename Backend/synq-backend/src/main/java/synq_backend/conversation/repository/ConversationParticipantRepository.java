@@ -38,4 +38,14 @@ extends JpaRepository<ConversationParticipant, Long> {
             @Param("userId1") UUID userId1,
             @Param("userId2") UUID userId2
     );
+
+    // Finds all conversations in which the given user participates.
+    @Query("""
+    SELECT cp.conversation
+    FROM ConversationParticipant cp
+    WHERE cp.user.id = :userId
+    """)
+    List<Conversation> findConversationsByUserId(
+            @Param("userId") UUID userId
+    );
 }
