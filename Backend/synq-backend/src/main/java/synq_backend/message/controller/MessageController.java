@@ -1,12 +1,16 @@
 package synq_backend.message.controller;
 
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import synq_backend.message.dto.EditMessageRequest;
 import synq_backend.message.dto.MessageDTO;
 import synq_backend.message.dto.SendMessageRequest;
 import synq_backend.message.service.MessageService;
 import synq_backend.user.entity.User;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import java.util.List;
 import java.util.UUID;
@@ -37,20 +41,20 @@ public class MessageController {
         return ResponseEntity.ok(message);
     }
 
-    // Retrieves all messages from a conversation for the authenticated user.
+    // Retrieves paginated messages from a conversation.
     @GetMapping("/conversation/{conversationId}")
-    public ResponseEntity<List<MessageDTO>> getMessages(
+    public List<MessageDTO> getMessages(
             Authentication authentication,
-            @PathVariable UUID conversationId
-    ){
+            @PathVariable UUID conversationId,
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable
+    ) {
         User user = (User) authentication.getPrincipal();
 
-        List<MessageDTO> messages = messageService.getMessages(
+        return messageService.getMessages(
                 user.getId(),
-                conversationId
+                conversationId,
+                pageable
         );
-
-        return ResponseEntity.ok(messages);
     }
 
     // Soft deletes a message for the authenticated sender.
@@ -67,5 +71,21 @@ public class MessageController {
         );
 
         return ResponseEntity.noContent().build();
+    }
+
+    // Updates an existing message for the authenticated sender.
+    @PatchMapping("/{messageId}")
+    public MessageDTO editMessage(
+            Authentication authentication,
+            @PathVariable UUID messageId,
+            @Valid @RequestBody EditMessageRequest request
+    ){
+        User user = (User) authentication.getPrincipal();
+
+        return messageService.editMessage(
+                user.getId(),
+                messageId,
+                request
+        );
     }
 }

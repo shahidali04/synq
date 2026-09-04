@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import synq_backend.common.exception.InvalidMessageOperationException;
 
 
 import java.util.Map;
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
         return Map.of(
               "error", "UNAUTHORIZED",
               "message", ex.getMessage()
+        );
+    }
+
+    // Handles invalid operations performed on messages.
+    @ExceptionHandler(InvalidMessageOperationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleInvalidMessageOperation(
+            InvalidMessageOperationException ex) {
+
+        return Map.of(
+                "error", "BAD_REQUEST",
+                "message", ex.getMessage()
         );
     }
 }

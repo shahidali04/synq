@@ -2,6 +2,8 @@ package synq_backend.message.service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import synq_backend.common.exception.InvalidMessageOperationException;
+import synq_backend.common.exception.ResourceNotFoundException;
 import synq_backend.conversation.entity.Conversation;
 import synq_backend.conversation.repository.ConversationParticipantRepository;
 import synq_backend.conversation.repository.ConversationRepository;
@@ -11,7 +13,11 @@ import synq_backend.message.entity.Message;
 import synq_backend.message.repository.MessageRepository;
 import synq_backend.user.entity.User;
 import synq_backend.user.repository.UserRepository;
+import synq_backend.message.dto.EditMessageRequest;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -86,7 +92,8 @@ public class MessageService {
     @Transactional
     public List<MessageDTO> getMessages(
             UUID currentId,
-            UUID conversationId
+            UUID conversationId,
+            Pageable pageable
     ){
         Conversation conversation = conversationRepository.findById(conversationId)
                 .orElseThrow(() ->
@@ -102,8 +109,9 @@ public class MessageService {
             throw new IllegalArgumentException("User is not a participant of this Conversation");
         }
 
-        List<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(
-                conversationId
+        Page<Message> messages = messageRepository.findByConversationIdOrderByCreatedAtAsc(
+                conversationId,
+                pageable
         );
 
         return  messages.stream()
@@ -136,5 +144,45 @@ public class MessageService {
         message.setDeletedAt(OffsetDateTime.now());
 
         messageRepository.save(message);
+    }
+
+    // Updates the content of an existing message for the authenticated sender.
+    @Transactional
+    public MessageDTO editMessage(UUID currentUserId,
+                                  UUID messageId,
+                                  EditMessageRequest request) {
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Message not found")
+                );
+
+        // Only the sender can edit the message.
+        if (!message.getSender().getId().equals(currentUserId)) {
+            throw new AccessDeniedException(
+                    "User is not the sender of this message"
+            );
+        }
+
+        // Deleted messages cannot be edited.
+        if (message.getDeletedAt() != null) {
+            throw new InvalidMessageOperationException(
+                    "Deleted messages cannot be edited"
+            );
+        }
+
+        message.setContent(request.getContent());
+
+        Message savedMessage = messageRepository.save(message);
+
+        return new MessageDTO(
+                savedMessage.getId(),
+                savedMessage.getConversation().getId(),
+                savedMessage.getSender().getId(),
+                savedMessage.getContent(),
+                savedMessage.getCreatedAt(),
+                savedMessage.getUpdatedAt(),
+                savedMessage.getDeletedAt() != null
+        );
     }
 }
