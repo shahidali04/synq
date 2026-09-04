@@ -7,6 +7,7 @@ import lombok.Setter;
 import synq_backend.conversation.entity.Conversation;
 import synq_backend.user.entity.User;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -42,6 +43,10 @@ public class Message {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
+
+    private LocalDateTime deliveredAt;
+
+    private LocalDateTime readAt;
 
     public Message(
             Conversation conversation,

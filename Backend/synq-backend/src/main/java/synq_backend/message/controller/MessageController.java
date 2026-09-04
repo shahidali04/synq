@@ -88,4 +88,32 @@ public class MessageController {
                 request
         );
     }
+
+    // Marks a message as delivered for the recipient.
+    @PatchMapping("/{messageId}/delivered")
+    public MessageDTO markAsDelivered(
+            Authentication authentication,
+            @PathVariable UUID messageId
+    ) {
+        User user = (User) authentication.getPrincipal();
+
+        return messageService.markAsDelivered(
+                user.getId(),
+                messageId
+        );
+    }
+
+    // Marks a message as read by the recipient.
+    @PatchMapping("/{messageId}/read")
+    public MessageDTO markAsRead(
+            Authentication authentication,
+            @PathVariable UUID messageId
+    ) {
+        User user = (User) authentication.getPrincipal();
+
+        return messageService.markAsRead(
+                user.getId(),
+                messageId
+        );
+    }
 }

@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -25,6 +26,10 @@ public class MessageDTO {
 
     private OffsetDateTime updatedAt;
 
+    private LocalDateTime deliveredAt;
+
+    private LocalDateTime readAt;
+
     private boolean deleted;
 
     public MessageDTO(
@@ -34,6 +39,8 @@ public class MessageDTO {
             String content,
             OffsetDateTime createdAt,
             OffsetDateTime updatedAt,
+            LocalDateTime deliveredAt,
+            LocalDateTime readAt,
             boolean deleted
     ){
         this.id =id;
@@ -42,6 +49,8 @@ public class MessageDTO {
         this.content = content;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.deliveredAt = deliveredAt;
+        this.readAt = readAt;
         this.deleted = deleted;
     }
 }

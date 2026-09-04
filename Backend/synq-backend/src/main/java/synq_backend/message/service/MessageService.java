@@ -18,6 +18,8 @@ import synq_backend.message.dto.EditMessageRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
+
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -84,6 +86,8 @@ public class MessageService {
                 savedMessage.getContent(),
                 savedMessage.getCreatedAt(),
                 savedMessage.getUpdatedAt(),
+                savedMessage.getDeliveredAt(),
+                savedMessage.getReadAt(),
                 savedMessage.getDeletedAt() != null
         );
     }
@@ -124,6 +128,8 @@ public class MessageService {
                                 : message.getContent(),
                         message.getCreatedAt(),
                         message.getUpdatedAt(),
+                        message.getDeliveredAt(),
+                        message.getReadAt(),
                         message.getDeletedAt() != null
                 ))
                 .toList();
@@ -182,7 +188,83 @@ public class MessageService {
                 savedMessage.getContent(),
                 savedMessage.getCreatedAt(),
                 savedMessage.getUpdatedAt(),
+                savedMessage.getDeliveredAt(),
+                savedMessage.getReadAt(),
                 savedMessage.getDeletedAt() != null
+        );
+    }
+
+    // Marks a message as delivered.
+    @Transactional
+    public MessageDTO markAsDelivered(UUID currentUserId, UUID messageId) {
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Message not found")
+                );
+
+        // Only a recipient can mark a message as delivered.
+        if (message.getSender().getId().equals(currentUserId)) {
+            throw new InvalidMessageOperationException(
+                    "Sender cannot mark their own message as delivered"
+            );
+        }
+
+        // Set delivery timestamp only once.
+        if (message.getDeliveredAt() == null) {
+            message.setDeliveredAt(LocalDateTime.now());
+            messageRepository.save(message);
+        }
+
+        return new MessageDTO(
+                message.getId(),
+                message.getConversation().getId(),
+                message.getSender().getId(),
+                message.getDeletedAt() != null
+                        ? null
+                        : message.getContent(),
+                message.getCreatedAt(),
+                message.getUpdatedAt(),
+                message.getDeliveredAt(),
+                message.getReadAt(),
+                message.getDeletedAt() != null
+        );
+    }
+
+    // Marks a message as read by the recipient.
+    @Transactional
+    public MessageDTO markAsRead(UUID currentUserId, UUID messageId) {
+
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Message not found")
+                );
+
+        // Only the recipient can mark the message as read.
+        if (message.getSender().getId().equals(currentUserId)) {
+            throw new InvalidMessageOperationException(
+                    "Sender cannot mark their own message as read"
+            );
+        }
+
+        // Set read timestamp only once.
+        if (message.getReadAt() == null) {
+            message.setReadAt(LocalDateTime.now());
+            messageRepository.save(message);
+        }
+
+        return new MessageDTO(
+                message.getId(),
+                message.getConversation().getId(),
+                message.getSender().getId(),
+                message.getDeletedAt() != null
+                        ? null
+                        : message.getContent(),
+                message.getCreatedAt(),
+                message.getUpdatedAt(),
+                message.getDeliveredAt(),
+                message.getReadAt(),
+                message.getDeletedAt() != null
         );
     }
 }
