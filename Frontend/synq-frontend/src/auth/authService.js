@@ -20,6 +20,18 @@ export const login = async (email, password) => {
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
 
+     // Get and store the authenticated user's ID.
+    const userResponse = await axios.get(
+        "http://localhost:8080/api/users/me",
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+        }
+    );
+
+    localStorage.setItem("userId", userResponse.data.id);
+
     return response.data;
 };
 
@@ -33,8 +45,14 @@ export const getRefreshToken = () => {
     return localStorage.getItem("refreshToken");
 };
 
+// Return the current stored userId
+export const getUserId = () => {
+    return localStorage.getItem("userId");
+};
+
 // Removes stored authentication tokens.
 export const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
+    localStorage.removeItem("userId");
 };

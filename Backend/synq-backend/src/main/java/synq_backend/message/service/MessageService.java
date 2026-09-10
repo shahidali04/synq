@@ -5,15 +5,18 @@ import org.springframework.stereotype.Service;
 import synq_backend.common.exception.InvalidMessageOperationException;
 import synq_backend.common.exception.ResourceNotFoundException;
 import synq_backend.conversation.entity.Conversation;
+import synq_backend.conversation.entity.ConversationParticipant;
 import synq_backend.conversation.repository.ConversationParticipantRepository;
 import synq_backend.conversation.repository.ConversationRepository;
 import synq_backend.message.dto.MessageDTO;
 import synq_backend.message.dto.SendMessageRequest;
 import synq_backend.message.entity.Message;
 import synq_backend.message.repository.MessageRepository;
+import synq_backend.notification.entity.NotificationType;
 import synq_backend.user.entity.User;
 import synq_backend.user.repository.UserRepository;
 import synq_backend.message.dto.EditMessageRequest;
+import synq_backend.notification.service.NotificationService;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Pageable;
@@ -30,18 +33,21 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final ConversationRepository conversationRepository;
     private final ConversationParticipantRepository participantRepository;
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public MessageService(
             MessageRepository messageRepository,
             ConversationRepository conversationRepository,
             ConversationParticipantRepository participantRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            NotificationService notificationService
     ){
         this.messageRepository = messageRepository;
         this.conversationRepository = conversationRepository;
         this.participantRepository = participantRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     // Sends a message from the authenticated user inside a conversation.
@@ -78,6 +84,28 @@ public class MessageService {
         );
 
         Message savedMessage = messageRepository.save(message);
+
+        // Find all participants in this conversation.
+        List<ConversationParticipant> participants =
+                participantRepository.findByConversationId(
+                        conversation.getId()
+                );
+
+        // Create a notification for every participant except the sender.
+        for (ConversationParticipant participant : participants) {
+
+            UUID recipientId = participant.getUser().getId();
+
+            if (!recipientId.equals(currentId)) {
+
+                notificationService.createNotification(
+                        recipientId,
+                        NotificationType.MESSAGE,
+                        "You have a new message",
+                        conversation.getId()
+                );
+            }
+        }
 
         return new MessageDTO(
                 savedMessage.getId(),

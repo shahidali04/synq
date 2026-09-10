@@ -1,4 +1,5 @@
 import { Client } from "@stomp/stompjs";
+import { getAccessToken, getUserId } from "../auth/authService";
 
 const websocketClient = new Client({
     brokerURL: "ws://localhost:8080/ws",
@@ -16,7 +17,7 @@ const websocketClient = new Client({
 export const connectWebSocket = (onConnected) => {
 
     // Get the latest access token when connecting.
-    const accessToken = localStorage.getItem("accessToken");
+    const accessToken = getAccessToken();
 
     websocketClient.connectHeaders = {
         Authorization: `Bearer ${accessToken}`,
@@ -25,13 +26,16 @@ export const connectWebSocket = (onConnected) => {
     websocketClient.onConnect = () => {
         console.log("Websocket connected successfully.");
 
-        // Subscribe to messages for the selected conversation.
-        websocketClient.subscribe(
-            "/topic/conversation/a9744cec-1ac9-487b-a74a-0777ddaa77b8",
-            (message) => {
-                console.log("Received WebSocket message:", message.body);
-            }
-        );
+        const userId = getUserId();
+
+        if (userId) {
+            websocketClient.subscribe(
+                `/topic/user/${userId}/notifications`,
+                (message) => {
+                    console.log("Received notification:", message.body);
+                }
+            );
+        }
 
         if (onConnected) {
             onConnected();

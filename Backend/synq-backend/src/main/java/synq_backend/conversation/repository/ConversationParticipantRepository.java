@@ -24,6 +24,9 @@ extends JpaRepository<ConversationParticipant, Long> {
     // Finds a participant record for a specific conversation and user.
     Optional<ConversationParticipant> findByConversationIdAndUserId(UUID conversationId, UUID userId);
 
+    // Finds all participants in a specific conversation.
+    List<ConversationParticipant> findByConversationId(UUID conversationId);
+
     // Finds a direct conversation shared by two users, if one already exists.
     @Query("""
     SELECT cp1.conversation
