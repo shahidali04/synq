@@ -38,14 +38,30 @@ public class ConversationParticipant {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Enumerated(EnumType.STRING)
+    @Column
+    private ParticipantRole role;
+
     @Column(name = "joined_at", nullable = false)
     private LocalDateTime joinedAt;
 
-    // Creates a participant record with the conversation, user, and join timestamp.
-    public ConversationParticipant(Conversation conversation,
-                                   User user){
+    // Constructor used for existing direct conversations.
+    public ConversationParticipant(
+            Conversation conversation,
+            User user
+    ) {
         this.conversation = conversation;
         this.user = user;
+        this.joinedAt = LocalDateTime.now();
+    }
+
+    // Constructor used when creating group participants with a specific role.
+    public ConversationParticipant(Conversation conversation,
+                                   User user,
+                                   ParticipantRole role){
+        this.conversation = conversation;
+        this.user = user;
+        this.role = role;
         this.joinedAt = LocalDateTime.now();
     }
 }

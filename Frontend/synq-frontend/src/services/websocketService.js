@@ -50,6 +50,32 @@ export const connectWebSocket = (onConnected) => {
     websocketClient.activate();
 };
 
+// Subscribe to real-time messages and system events for a conversation.
+export const subscribeToConversation = (conversationId, onMessage) => {
+
+    if (!websocketClient.connected) {
+        console.error("WebSocket is not connected.");
+        return null;
+    }
+
+    const destination = `/topic/conversation/${conversationId}`;
+
+    const subscription = websocketClient.subscribe(
+        destination,
+        (message) => {
+            const messageData = JSON.parse(message.body);
+
+            if (onMessage) {
+                onMessage(messageData);
+            }
+        }
+    );
+
+    console.log(`Subscribed to conversation: ${conversationId}`);
+
+    return subscription;
+};
+
 // Disconnect from the WebSocket server.
 export const disconnectWebSocket = () => {
     if (websocketClient.active) {

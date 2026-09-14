@@ -3,6 +3,7 @@ package synq_backend.message.dto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import synq_backend.message.entity.MessageType;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -32,6 +33,8 @@ public class MessageDTO {
 
     private boolean deleted;
 
+    private MessageType type;
+
     public MessageDTO(
             UUID id,
             UUID conversationId,
@@ -41,7 +44,8 @@ public class MessageDTO {
             OffsetDateTime updatedAt,
             LocalDateTime deliveredAt,
             LocalDateTime readAt,
-            boolean deleted
+            boolean deleted,
+            MessageType type
     ){
         this.id =id;
         this.conversationId = conversationId;
@@ -52,5 +56,6 @@ public class MessageDTO {
         this.deliveredAt = deliveredAt;
         this.readAt = readAt;
         this.deleted = deleted;
+        this.type = type;
     }
 }

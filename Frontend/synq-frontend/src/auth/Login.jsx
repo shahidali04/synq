@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { login } from "./authService";
-import { connectWebSocket } from "../services/websocketService";
+import { connectWebSocket, subscribeToConversation } from "../services/websocketService";
 
 function Login() {
 
@@ -23,7 +23,14 @@ function Login() {
 
             console.log("Login successful.");
 
-            connectWebSocket();
+            connectWebSocket(() => {
+                subscribeToConversation(
+                    "542feed6-7517-4090-a9bf-9a67e30f7463",
+                    (message) => {
+                        console.log("Conversation event:", message);
+                    }
+                );
+            });
 
         } catch (error) {
 

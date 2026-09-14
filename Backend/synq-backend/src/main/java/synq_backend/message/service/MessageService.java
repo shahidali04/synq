@@ -116,7 +116,8 @@ public class MessageService {
                 savedMessage.getUpdatedAt(),
                 savedMessage.getDeliveredAt(),
                 savedMessage.getReadAt(),
-                savedMessage.getDeletedAt() != null
+                savedMessage.getDeletedAt() != null,
+                savedMessage.getType()
         );
     }
 
@@ -158,7 +159,8 @@ public class MessageService {
                         message.getUpdatedAt(),
                         message.getDeliveredAt(),
                         message.getReadAt(),
-                        message.getDeletedAt() != null
+                        message.getDeletedAt() != null,
+                        message.getType()
                 ))
                 .toList();
     }
@@ -218,7 +220,8 @@ public class MessageService {
                 savedMessage.getUpdatedAt(),
                 savedMessage.getDeliveredAt(),
                 savedMessage.getReadAt(),
-                savedMessage.getDeletedAt() != null
+                savedMessage.getDeletedAt() != null,
+                savedMessage.getType()
         );
     }
 
@@ -255,7 +258,8 @@ public class MessageService {
                 message.getUpdatedAt(),
                 message.getDeliveredAt(),
                 message.getReadAt(),
-                message.getDeletedAt() != null
+                message.getDeletedAt() != null,
+                message.getType()
         );
     }
 
@@ -292,7 +296,8 @@ public class MessageService {
                 message.getUpdatedAt(),
                 message.getDeliveredAt(),
                 message.getReadAt(),
-                message.getDeletedAt() != null
+                message.getDeletedAt() != null,
+                message.getType()
         );
     }
 }

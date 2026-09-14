@@ -27,6 +27,10 @@ public class Message {
     @JoinColumn(name = "conversation_id", nullable = false)
     private Conversation conversation;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private MessageType type = MessageType.CHAT;
+
     // User who sent this message.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "sender_id", nullable = false)
@@ -56,6 +60,22 @@ public class Message {
         this.conversation = conversation;
         this.sender = sender;
         this.content = content;
+
+        OffsetDateTime now = OffsetDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    public Message(
+            Conversation conversation,
+            User sender,
+            String content,
+            MessageType type
+    ) {
+        this.conversation = conversation;
+        this.sender = sender;
+        this.content = content;
+        this.type = type;
 
         OffsetDateTime now = OffsetDateTime.now();
         this.createdAt = now;
