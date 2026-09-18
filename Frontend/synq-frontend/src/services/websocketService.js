@@ -1,6 +1,9 @@
 import { Client } from "@stomp/stompjs";
 import { getAccessToken, getUserId } from "../auth/authService";
 
+// Stores active conversation subscriptions by conversation ID.
+const conversationSubscriptions = new Map();
+
 const websocketClient = new Client({
     brokerURL: "ws://localhost:8080/ws",
 
@@ -28,11 +31,43 @@ export const connectWebSocket = (onConnected) => {
 
         const userId = getUserId();
 
+        // Listen for private notifications sent to the current user.
         if (userId) {
             websocketClient.subscribe(
                 `/topic/user/${userId}/notifications`,
                 (message) => {
                     console.log("Received notification:", message.body);
+                }
+            );
+        }
+
+        // Listen for WebSocket events that require changes to the user's subscriptions.
+        if (userId) {
+            websocketClient.subscribe(
+                `/topic/user/${userId}/conversation-events`,
+                (message) => {
+
+                    const event = JSON.parse(message.body);
+
+                    // Remove the user's subscription when they are no longer
+                    // a member of the conversation.
+                    if (event.type === "FORCE_UNSUBSCRIBE") {
+
+                        const subscription =
+                            conversationSubscriptions.get(event.conversationId);
+
+                        if (subscription) {
+                            subscription.unsubscribe();
+
+                            conversationSubscriptions.delete(
+                                event.conversationId
+                            );
+
+                            console.log(
+                                `Unsubscribed from conversation: ${event.conversationId}`
+                            );
+                        }
+                    }
                 }
             );
         }
@@ -50,7 +85,7 @@ export const connectWebSocket = (onConnected) => {
     websocketClient.activate();
 };
 
-// Subscribe to real-time messages and system events for a conversation.
+// Subscribe to a conversation and keep track of the active subscription.
 export const subscribeToConversation = (conversationId, onMessage) => {
 
     if (!websocketClient.connected) {
@@ -63,6 +98,7 @@ export const subscribeToConversation = (conversationId, onMessage) => {
     const subscription = websocketClient.subscribe(
         destination,
         (message) => {
+
             const messageData = JSON.parse(message.body);
 
             if (onMessage) {
@@ -71,13 +107,30 @@ export const subscribeToConversation = (conversationId, onMessage) => {
         }
     );
 
-    console.log(`Subscribed to conversation: ${conversationId}`);
+    // Store the subscription so it can be removed later if
+    // the user is removed from or leaves the conversation.
+    conversationSubscriptions.set(
+        conversationId,
+        subscription
+    );
+
+    console.log(
+        `Subscribed to conversation: ${conversationId}`
+    );
 
     return subscription;
 };
 
 // Disconnect from the WebSocket server.
 export const disconnectWebSocket = () => {
+
+    // Remove all active conversation subscriptions.
+    conversationSubscriptions.forEach((subscription) => {
+        subscription.unsubscribe();
+    });
+
+    conversationSubscriptions.clear();
+
     if (websocketClient.active) {
         websocketClient.deactivate();
     }

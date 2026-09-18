@@ -23,6 +23,7 @@ import synq_backend.user.entity.User;
 import synq_backend.user.repository.UserRepository;
 import synq_backend.group.dto.AddGroupMemberRequest;
 import synq_backend.group.dto.GroupMembersDTO;
+import synq_backend.message.service.WebSocketService;
 
 import java.util.List;
 
@@ -38,6 +39,7 @@ public class GroupService {
     private final NotificationService notificationService;
     private final MessageRepository messageRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final WebSocketService webSocketService;
 
     public GroupService(
             GroupRepository groupRepository,
@@ -46,7 +48,8 @@ public class GroupService {
             UserRepository userRepository,
             NotificationService notificationService,
             MessageRepository messageRepository,
-            SimpMessagingTemplate messagingTemplate
+            SimpMessagingTemplate messagingTemplate,
+            WebSocketService webSocketService
     ){
         this.groupRepository = groupRepository;
         this.conversationRepository = conversationRepository;
@@ -55,6 +58,7 @@ public class GroupService {
         this.notificationService = notificationService;
         this.messageRepository = messageRepository;
         this.messagingTemplate = messagingTemplate;
+        this.webSocketService =webSocketService;
     }
 
     @Transactional
@@ -298,6 +302,13 @@ public class GroupService {
                 MessageType.SYSTEM
         );
 
+        // Finally tell the removed user's frontend to unsubscribe.
+        webSocketService.disconnectFromConversation(
+                userIdToRemove,
+                group.getConversation().getId()
+        );
+
+
         Message savedMessage = messageRepository.save(systemMessage);
 
         MessageDTO systemMessageDTO = new MessageDTO(
@@ -368,6 +379,12 @@ public class GroupService {
                 member.getUser(),
                 member.getUser().getUsername() + " left the group",
                 MessageType.SYSTEM
+        );
+
+        // Finally tell the removed user's frontend to unsubscribe.
+        webSocketService.disconnectFromConversation(
+                currentUserId,
+                group.getConversation().getId()
         );
 
         Message savedMessage = messageRepository.save(systemMessage);
