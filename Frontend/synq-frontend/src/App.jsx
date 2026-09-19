@@ -7,8 +7,8 @@ function App() {
     const handleSendMessage = () => {
 
         const message = {
-            conversationId: "b95d7089-7539-42f4-915d-668c65f73118",
-            content: "Isolation test - Conversation C"
+            conversationId: "542feed6-7517-4090-a9bf-9a67e30f7463",
+            content: "Hello @testuser3"
         };
 
         // Send the message to the backend.
@@ -22,7 +22,7 @@ function App() {
             <hr />
 
             <button onClick={handleSendMessage}>
-                Send WebSocket Message
+                Send Message
             </button>
         </div>
     );

@@ -18,6 +18,9 @@ import synq_backend.user.repository.UserRepository;
 import synq_backend.message.dto.EditMessageRequest;
 import synq_backend.notification.service.NotificationService;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
@@ -75,6 +78,39 @@ public class MessageService {
             throw new IllegalArgumentException(
                     "User is not a Participant of this conversation"
             );
+        }
+
+        // Detect @username mentions in the message content.
+        Pattern mentionPattern = Pattern.compile("@([a-zA-Z0-9_]+)");
+        Matcher matcher = mentionPattern.matcher(request.getContent());
+
+        while (matcher.find()) {
+
+            String username = matcher.group(1);
+
+            userRepository.findByUsername(username)
+                    .ifPresent(user -> {
+
+                        boolean isMentionedUserParticipant =
+                                participantRepository.existsByConversationIdAndUserId(
+                                                conversation.getId(),
+                                                user.getId()
+                                );
+
+                        if (isMentionedUserParticipant) {
+
+                            System.out.println(
+                                    "Valid mention: @" + user.getUsername()
+                                    );
+
+                        } else {
+                            System.out.println(
+                                    "Ignored mention: @" + user.getUsername()
+                                            + " is not a participant"
+                            );
+                        }
+
+                    });
         }
 
         Message message = new Message(

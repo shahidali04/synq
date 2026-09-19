@@ -1,6 +1,34 @@
 import { useState } from "react";
 import { login } from "./authService";
-import { connectWebSocket, subscribeToConversation } from "../services/websocketService";
+import {
+    connectWebSocket,
+    subscribeToConversation
+} from "../services/websocketService";
+
+function renderMessageContent(content) {
+    const parts = content.split(/(@[a-zA-Z0-9_]+)/g);
+
+    return parts.map((part, index) => {
+
+        if (part.startsWith("@")) {
+            return (
+                <span
+                    key={index}
+                    style={{
+                        fontWeight: "bold",
+                        backgroundColor: "#e8f0fe",
+                        padding: "2px 4px",
+                        borderRadius: "4px"
+                    }}
+                >
+                    {part}
+                </span>
+            );
+        }
+
+        return <span key={index}>{part}</span>;
+    });
+}
 
 function Login() {
 
@@ -8,6 +36,7 @@ function Login() {
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [messages, setMessages] = useState([]);
 
     // Handles user login.
     const handleLogin = async (event) => {
@@ -24,10 +53,20 @@ function Login() {
             console.log("Login successful.");
 
             connectWebSocket(() => {
+
                 subscribeToConversation(
                     "542feed6-7517-4090-a9bf-9a67e30f7463",
                     (message) => {
-                        console.log("Conversation event:", message);
+
+                        console.log(
+                            "Conversation event:",
+                            message
+                        );
+
+                        setMessages((previousMessages) => [
+                            ...previousMessages,
+                            message
+                        ]);
                     }
                 );
             });
@@ -46,6 +85,7 @@ function Login() {
 
     return (
         <div>
+
             <h1>Synq Login</h1>
 
             <form onSubmit={handleLogin}>
@@ -54,7 +94,9 @@ function Login() {
                     type="email"
                     placeholder="Email"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
+                    onChange={(event) =>
+                        setEmail(event.target.value)
+                    }
                     required
                 />
 
@@ -62,17 +104,33 @@ function Login() {
                     type="password"
                     placeholder="Password"
                     value={password}
-                    onChange={(event) => setPassword(event.target.value)}
+                    onChange={(event) =>
+                        setPassword(event.target.value)
+                    }
                     required
                 />
 
-                <button type="submit" disabled={loading}>
+                <button
+                    type="submit"
+                    disabled={loading}
+                >
                     {loading ? "Logging in..." : "Login"}
                 </button>
 
                 {error && <p>{error}</p>}
 
             </form>
+
+            <div>
+                <h2>Messages</h2>
+
+                {messages.map((message) => (
+                    <p key={message.id}>
+                        {renderMessageContent(message.content)}
+                    </p>
+                ))}
+            </div>
+
         </div>
     );
 }
