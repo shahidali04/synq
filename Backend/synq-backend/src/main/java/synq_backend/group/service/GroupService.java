@@ -41,6 +41,7 @@ public class GroupService {
     private final SimpMessagingTemplate messagingTemplate;
     private final WebSocketService webSocketService;
 
+
     public GroupService(
             GroupRepository groupRepository,
             ConversationRepository conversationRepository,
